@@ -1,53 +1,22 @@
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.*;
-import java.sql.Connection;
 
 public class LoginPage extends JPanel {
     public LoginPage(App app) {
-        setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
+        setLayout(null);
 
-        // 사용자 로그인 버튼
-        JButton userLoginButton = new JButton("User Login");
-        userLoginButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                Connection conn = DatabaseConnection.getUserConnection();
-                if (conn != null) {
-                    JOptionPane.showMessageDialog(null, "User Login Successful");
-                    app.showPage(App.SEARCH_PAGE);
-                } else {
-                    JOptionPane.showMessageDialog(null, "User Login Failed");
-                }
-            }
-        });
+        JButton userButton = new JButton("회원");
+        JButton adminButton = new JButton("관리자");
 
-        // 관리자 로그인 버튼
-        JButton adminLoginButton = new JButton("Admin Login");
-        adminLoginButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                Connection conn = DatabaseConnection.getAdminConnection();
-                if (conn != null) {
-                    JOptionPane.showMessageDialog(null, "Admin Login Successful");
-                    app.showPage(App.ADMIN_PAGE);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Admin Login Failed");
-                }
-            }
-        });
+        userButton.setBounds(10, 10, 120, 140);
+        adminButton.setBounds(150, 10, 120, 140);
 
-        // 사용자 로그인 버튼 위치 설정
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        add(userLoginButton, gbc);
+        add(userButton);
+        add(adminButton);
 
-        // 관리자 로그인 버튼 위치 설정
-        gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        add(adminLoginButton, gbc);
+        userButton.addActionListener(e -> app.showPage(App.SEARCH_PAGE));
+        adminButton.addActionListener(e -> app.showPage(App.ADMIN_PAGE));
     }
 }

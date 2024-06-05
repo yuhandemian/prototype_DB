@@ -41,13 +41,11 @@ public class App extends JFrame {
     }
 
     public static void main(String[] args) {
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    new App();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        EventQueue.invokeLater(() -> {
+            try {
+                new App();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }
