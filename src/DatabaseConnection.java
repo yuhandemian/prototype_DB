@@ -4,14 +4,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class DatabaseConnection {
-	  private static final String URL = "jdbc:mysql://localhost/db1";
-	    private static final String USER = "root";
-	    private static final String PASSWORD = "1234";
-	    
+    private static final String URL = "jdbc:mysql://localhost/db1";
+    private static final String USER = "root";
+    private static final String PASSWORD = "1234";
+
     public static Connection getAdminConnection() {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver"); // MySQL 드라이버 로드
-            Connection adminConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/db1", "root", "1234"); // JDBC 연결
+            Connection adminConn = DriverManager.getConnection(URL, USER, PASSWORD); // JDBC 연결
             System.out.println("DB 연결 완료 - 관리자");
             return adminConn;
         } catch (ClassNotFoundException e) {
@@ -25,7 +25,7 @@ public class DatabaseConnection {
     public static Connection getUserConnection() {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver"); // MySQL 드라이버 로드
-            Connection userConn = DriverManager.getConnection("jdbc:mysql://localhost:3306/db1", "user1", "user1"); // JDBC 연결
+            Connection userConn = DriverManager.getConnection(URL, "user1", "user1"); // JDBC 연결
             System.out.println("DB 연결 완료 - 사용자");
             return userConn;
         } catch (ClassNotFoundException e) {
@@ -35,6 +35,7 @@ public class DatabaseConnection {
         }
         return null;
     }
+
 
     public static void initializeDatabase() {
         Connection conn = null;

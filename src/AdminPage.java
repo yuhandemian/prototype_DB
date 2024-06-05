@@ -2,8 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.*;
-import java.util.Vector;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 
 public class AdminPage extends JPanel {
     private JComboBox<String> tableComboBox;
@@ -51,7 +55,7 @@ public class AdminPage extends JPanel {
         // 결과 테이블
         resultTable = new JTable();
         tableScrollPane = new JScrollPane(resultTable);
-        add(tableScrollPane, BorderLayout.SOUTH);
+        centerPanel.add(tableScrollPane);
 
         // 데이터베이스 수정/삭제/변경 기능 추가
         JPanel modifyPanel = new JPanel(new BorderLayout());
@@ -115,25 +119,35 @@ public class AdminPage extends JPanel {
     }
 
     private static javax.swing.table.TableModel buildTableModel(ResultSet rs) throws SQLException {
-        java.sql.ResultSetMetaData metaData = rs.getMetaData();
+        ResultSetMetaData metaData = rs.getMetaData();
         int columnCount = metaData.getColumnCount();
 
         // Column names
-        Vector<String> columnNames = new Vector<>();
+        ArrayList<String> columnNames = new ArrayList<>();
         for (int column = 1; column <= columnCount; column++) {
             columnNames.add(metaData.getColumnName(column));
         }
 
         // Data of the table
-        Vector<Vector<Object>> data = new Vector<>();
+        ArrayList<ArrayList<Object>> data = new ArrayList<>();
         while (rs.next()) {
-            Vector<Object> vector = new Vector<>();
+            ArrayList<Object> row = new ArrayList<>();
             for (int columnIndex = 1; columnIndex <= columnCount; columnIndex++) {
-                vector.add(rs.getObject(columnIndex));
+                row.add(rs.getObject(columnIndex));
             }
-            data.add(vector);
+            data.add(row);
         }
 
-        return new javax.swing.table.DefaultTableModel(data, columnNames);
+        // Convert data to Object[][]
+        Object[][] dataArray = new Object[data.size()][];
+        for (int i = 0; i < data.size(); i++) {
+            dataArray[i] = data.get(i).toArray();
+        }
+
+        // Convert column names to String[]
+        String[] columnArray = new String[columnNames.size()];
+        columnNames.toArray(columnArray);
+
+        return new javax.swing.table.DefaultTableModel(dataArray, columnArray);
     }
 }
