@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
 import java.sql.Connection;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 public class App extends JFrame {
     public static final String LOGIN_PAGE = "LoginPage";
@@ -10,74 +12,83 @@ public class App extends JFrame {
     public static final String MOVIE_DETAIL_PAGE = "MovieDetailPage";
     public static final String MY_TICKET_PAGE = "MyTicketPage";
     public static final String RESERVATION_DETAIL_PAGE = "ReservationDetailPage";
+    public static final String MODIFY_RESERVATION_PAGE = "ModifyReservationPage";
 
     private CardLayout cardLayout;
-    private JPanel cardPanel;
+    private JPanel mainPanel;
     private Connection connection;
+    private JPanel loginPage;
+    private JPanel searchPage;
+    private JPanel adminPage;
+    private ReservationPage reservationPage;
     private MovieDetail movieDetailPage;
     private MyTicketPage myTicketPage;
     private ReservationDetail reservationDetailPage;
-    private JPanel navigationPanel;
+    private ModifyReservationPage modifyReservationPage;
+    private LocalDate currentDate;
+    private LocalTime currentTime;
+    private String selectedMovieTitle;
+    private JoinedTicketObj currentTicket;
+    private int currentUserId;
 
     public App() {
+        setTitle("Movie Booking System");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(800, 600);
         cardLayout = new CardLayout();
-        cardPanel = new JPanel(cardLayout);
-        add(cardPanel, BorderLayout.CENTER);
+        mainPanel = new JPanel(cardLayout);
 
-        // 초기 페이지들 추가
-        cardPanel.add(new LoginPage(this), LOGIN_PAGE); // LoginPage 추가
-        cardPanel.add(new SearchPage(this), SEARCH_PAGE);
-        cardPanel.add(new AdminPage(this), ADMIN_PAGE);
-        cardPanel.add(new ReservationPage(this), RESERVATION_PAGE);
-
-        movieDetailPage = new MovieDetail(this);
-        myTicketPage = new MyTicketPage(this);
-        reservationDetailPage = new ReservationDetail(this);
-
-        cardPanel.add(movieDetailPage, MOVIE_DETAIL_PAGE);
-        cardPanel.add(myTicketPage, MY_TICKET_PAGE);
-        cardPanel.add(reservationDetailPage, RESERVATION_DETAIL_PAGE);
-
-        // 네비게이션 패널 추가
-        navigationPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        add(navigationPanel, BorderLayout.NORTH);
-
-        JButton searchButton = new JButton("영화 검색");
-        JButton myTicketsButton = new JButton("나의 예매");
-        JButton logoutButton = new JButton("로그아웃");
-
-        searchButton.addActionListener(e -> showPage(SEARCH_PAGE));
-        myTicketsButton.addActionListener(e -> showPage(MY_TICKET_PAGE));
-        logoutButton.addActionListener(e -> showPage(LOGIN_PAGE));
-
-        navigationPanel.add(searchButton);
-        navigationPanel.add(myTicketsButton);
-        navigationPanel.add(logoutButton);
+        add(mainPanel, BorderLayout.CENTER);
 
         // 기본 크기 및 종료 설정
-        setTitle("Movie Reservation System");
-        setSize(800, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-
-        showPage(LOGIN_PAGE);
+        setVisible(true);
     }
 
     public void showPage(String page) {
-        if (page.equals(LOGIN_PAGE) || page.equals(ADMIN_PAGE)) {
-            navigationPanel.setVisible(false);
-        } else {
-            navigationPanel.setVisible(true);
+        switch (page) {
+            case LOGIN_PAGE:
+                if (loginPage == null) loginPage = new LoginPage(this);
+                mainPanel.add(loginPage, LOGIN_PAGE);
+                break;
+            case SEARCH_PAGE:
+                if (searchPage == null) searchPage = new SearchPage(this);
+                mainPanel.add(searchPage, SEARCH_PAGE);
+                break;
+            case ADMIN_PAGE:
+                if (adminPage == null) adminPage = new AdminPage(this);
+                mainPanel.add(adminPage, ADMIN_PAGE);
+                break;
+            case RESERVATION_PAGE:
+                if (reservationPage == null) reservationPage = new ReservationPage(this);
+                reservationPage.setSelectedMovie(selectedMovieTitle); // 선택된 영화 제목 설정
+                mainPanel.add(reservationPage, RESERVATION_PAGE);
+                break;
+            case MOVIE_DETAIL_PAGE:
+                if (movieDetailPage == null) movieDetailPage = new MovieDetail(this);
+                mainPanel.add(movieDetailPage, MOVIE_DETAIL_PAGE);
+                break;
+            case MY_TICKET_PAGE:
+                if (myTicketPage == null) myTicketPage = new MyTicketPage(this);
+                else myTicketPage.updateTicketCards(this); // 예매 확인 페이지 갱신
+                mainPanel.add(myTicketPage, MY_TICKET_PAGE);
+                break;
+            case RESERVATION_DETAIL_PAGE:
+                if (reservationDetailPage == null) reservationDetailPage = new ReservationDetail(this);
+                mainPanel.add(reservationDetailPage, RESERVATION_DETAIL_PAGE);
+                break;
+            case MODIFY_RESERVATION_PAGE:
+                if (modifyReservationPage == null) modifyReservationPage = new ModifyReservationPage(this);
+                modifyReservationPage.setTicketDetails(currentTicket); // Set the ticket details
+                mainPanel.add(modifyReservationPage, MODIFY_RESERVATION_PAGE);
+                break;
         }
-        cardLayout.show(cardPanel, page);
+        cardLayout.show(mainPanel, page);
     }
 
     public void setConnection(Connection connection) {
-        // LoginPage에서는 Connection 설정하지 않음
-        if (!(cardPanel.getComponent(cardPanel.getComponentCount() - 1) instanceof LoginPage)) {
-            this.connection = connection;
-            System.out.println("Connection 설정 완료");
-        }
+        this.connection = connection;
+        System.out.println("Connection 설정 완료");
     }
 
     public Connection getConnection() {
@@ -85,19 +96,53 @@ public class App extends JFrame {
     }
 
     public void showMovieDetails(String movieTitle) {
+        if (movieDetailPage == null) movieDetailPage = new MovieDetail(this);
         movieDetailPage.displayMovieDetails(movieTitle);
         showPage(MOVIE_DETAIL_PAGE);
     }
 
     public void showReservationDetail(int ticketID) {
+        if (reservationDetailPage == null) reservationDetailPage = new ReservationDetail(this);
         reservationDetailPage.displayTicketDetails(ticketID);
         showPage(RESERVATION_DETAIL_PAGE);
+    }
+
+    public void setCurrentDateTime(LocalDate date, LocalTime time) {
+        this.currentDate = date;
+        this.currentTime = time;
+        System.out.println("Current Date and Time 설정 완료: " + date + " " + time);
+    }
+
+    public LocalDate getCurrentDate() {
+        return currentDate;
+    }
+
+    public LocalTime getCurrentTime() {
+        return currentTime;
+    }
+
+    public void setSelectedMovieTitle(String movieTitle) {
+        this.selectedMovieTitle = movieTitle;
+    }
+
+    public void setCurrentTicket(JoinedTicketObj ticket) {
+        this.currentTicket = ticket;
+    }
+
+    public int getCurrentUserId() {
+        return currentUserId;
+    }
+
+    public void setCurrentUserId(int userId) {
+        this.currentUserId = userId;
     }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             App app = new App();
-            app.setVisible(true);
+            Connection conn = DatabaseConnection.getUserConnection();
+            app.setConnection(conn);
+            app.showPage(LOGIN_PAGE); // 초기 페이지 설정
         });
     }
 }

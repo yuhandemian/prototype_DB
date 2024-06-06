@@ -1,155 +1,223 @@
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.MalformedURLException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
+import javax.swing.*;
 
 public class SearchPage extends JPanel {
-    private JTextField titleField, directorField, actorField;
+    private static final long serialVersionUID = 1L;
+
+    private JTextField movieNameTextField;
+    private JTextField directorNameTextField;
+    private JTextField actorNameTextField;
     private JComboBox<String> genreComboBox;
-    private JTable resultTable;
-    private JLabel resultCountLabel;
-    private DefaultTableModel tableModel;
-    private App app; // App 객체를 저장할 변수 추가
+    private JPanel verticalLayout;
+
+    private final static String DEFAULT_GENRE = "장르 선택";
+    private String[] genreName = getGenres();
 
     public SearchPage(App app) {
-        if (app == null) {
-            throw new IllegalArgumentException("App 인스턴스가 null입니다.");
-        }
-        this.app = app; // App 클래스의 인스턴스를 저장
+        setBackground(new Color(255, 255, 255));
+        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 
-        setLayout(new BorderLayout());
+        ComponentSideMenu sideMenuBar = new ComponentSideMenu(app);
+        add(sideMenuBar, BorderLayout.WEST);
 
-        // 검색 패널 배치
-        JPanel searchPanel = new JPanel(new GridLayout(5, 2, 10, 10));
-        searchPanel.setBorder(BorderFactory.createTitledBorder("영화 검색"));
+        JPanel windowLayout = new JPanel();
+        windowLayout.setBackground(new Color(255, 255, 255));
+        windowLayout.setPreferredSize(new Dimension(650, getHeight()));
+        add(windowLayout, BorderLayout.CENTER);
+        windowLayout.setLayout(null);
 
-        searchPanel.add(new JLabel("영화명:"));
-        titleField = new JTextField();
-        searchPanel.add(titleField);
+        JPanel panel = new JPanel();
+        panel.setBounds(50, 20, 550, 150);
+        windowLayout.add(panel);
+        panel.setBackground(new Color(255, 255, 255));
+        panel.setLayout(null);
 
-        searchPanel.add(new JLabel("감독명:"));
-        directorField = new JTextField();
-        searchPanel.add(directorField);
+        // 영화 이름 입력 상자
+        JLabel movieNameLabel = new JLabel("영화명:");
+        movieNameLabel.setBounds(10, 10, 80, 25);
+        panel.add(movieNameLabel);
+        movieNameTextField = new JTextField();
+        movieNameTextField.setBounds(100, 10, 200, 25);
+        panel.add(movieNameTextField);
 
-        searchPanel.add(new JLabel("배우명:"));
-        actorField = new JTextField();
-        searchPanel.add(actorField);
+        // 감독 이름 입력 상자
+        JLabel directorNameLabel = new JLabel("감독명:");
+        directorNameLabel.setBounds(10, 40, 80, 25);
+        panel.add(directorNameLabel);
+        directorNameTextField = new JTextField();
+        directorNameTextField.setBounds(100, 40, 200, 25);
+        panel.add(directorNameTextField);
 
-        searchPanel.add(new JLabel("장르:"));
-        genreComboBox = new JComboBox<>(new String[]{"", "Action", "Comedy", "Drama", "Horror", "Sci-Fi", "Romance"});
-        searchPanel.add(genreComboBox);
+        // 배우 이름 입력 상자
+        JLabel actorNameLabel = new JLabel("배우명:");
+        actorNameLabel.setBounds(10, 70, 80, 25);
+        panel.add(actorNameLabel);
+        actorNameTextField = new JTextField();
+        actorNameTextField.setBounds(100, 70, 200, 25);
+        panel.add(actorNameTextField);
 
+        // 장르 선택 상자
+        JLabel genreLabel = new JLabel("장르:");
+        genreLabel.setBounds(10, 100, 80, 25);
+        panel.add(genreLabel);
+        genreComboBox = new JComboBox<>(genreName);
+        genreComboBox.setBounds(100, 100, 200, 25);
+        panel.add(genreComboBox);
+
+        // 검색 버튼
         JButton searchButton = new JButton("검색");
-        searchButton.addActionListener(e -> searchMovies());
-        searchPanel.add(searchButton);
+        searchButton.setBounds(310, 10, 80, 25);
+        panel.add(searchButton);
 
-        JButton clearButton = new JButton("취소");
-        clearButton.addActionListener(e -> clearSearch());
-        searchPanel.add(clearButton);
+        // 취소 버튼
+        JButton resetButton = new JButton("취소");
+        resetButton.setBounds(310, 40, 80, 25);
+        panel.add(resetButton);
 
-        add(searchPanel, BorderLayout.NORTH);
+        JLabel resultLabel = new JLabel("0개의 영화");
+        resultLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 14));
+        resultLabel.setBounds(50, 180, 100, 30);
+        windowLayout.add(resultLabel);
 
-        // 검색 결과 테이블 배치
-        tableModel = new DefaultTableModel(new Object[]{"영화명", "상영 등급", "상영시간", "상영 중 여부", "포스터", "상영 정보", "예매하기"}, 0);
-        resultTable = new JTable(tableModel) {
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        resultTable.setRowHeight(100);
-
-        resultTable.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                int row = resultTable.rowAtPoint(evt.getPoint());
-                int col = resultTable.columnAtPoint(evt.getPoint());
-                if (col == 0 || col == 4) { // 영화 제목이나 포스터 클릭 시
-                    String movieTitle = (String) resultTable.getValueAt(row, 0);
-                    app.showMovieDetails(movieTitle);
-                }
+        searchButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                updateMoviePoster(app, resultLabel);
             }
         });
 
-        JScrollPane tableScrollPane = new JScrollPane(resultTable);
-        add(tableScrollPane, BorderLayout.CENTER);
+        resetButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                movieNameTextField.setText("");
+                directorNameTextField.setText("");
+                actorNameTextField.setText("");
+                genreComboBox.setSelectedItem(DEFAULT_GENRE);
 
-        // 검색 결과 개수 레이블 배치
-        resultCountLabel = new JLabel("검색된 영화 수: 0");
-        add(resultCountLabel, BorderLayout.PAGE_END);
+                updateMoviePoster(app, resultLabel);
+            }
+        });
+
+        // 스크롤 뷰 구현
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setBounds(6, 220, 636, 362);
+        scrollPane.setBorder(null);
+        windowLayout.add(scrollPane);
+
+        verticalLayout = new JPanel();
+        scrollPane.setViewportView(verticalLayout);
+        verticalLayout.setBackground(new Color(255, 255, 255));
+        verticalLayout.setLayout(new GridLayout(0, 3, 10, 10)); // GridLayout으로 변경
+
+        updateMoviePoster(app, resultLabel);
     }
 
-    private void searchMovies() {
-        String title = titleField.getText();
-        String director = directorField.getText();
-        String actor = actorField.getText();
-        String genre = (String) genreComboBox.getSelectedItem();
-
-        StringBuilder query = new StringBuilder(
-                "SELECT M.Title, M.Rating, M.Duration, S.StartDate, S.StartTime, M.PosterURL " +
-                "FROM Movie M " +
-                "LEFT JOIN ScreeningSchedule S ON M.MovieID = S.MovieID " +
-                "WHERE 1=1"
+    private void updateMoviePoster(App app, JLabel resultLabel) {
+        MovieObj[] movies = getMovieData(
+                movieNameTextField.getText(),
+                directorNameTextField.getText(),
+                actorNameTextField.getText(),
+                genreComboBox.getSelectedItem().toString(),
+                app.getCurrentDate(),
+                app.getCurrentTime()
         );
-        if (!title.isEmpty()) {
-            query.append(" AND M.Title LIKE '%").append(title).append("%'");
+
+        verticalLayout.removeAll();
+
+        for (MovieObj movie : movies) {
+            ComponentMoviePoster poster = new ComponentMoviePoster(app, movie);
+            verticalLayout.add(poster);
         }
-        if (!director.isEmpty()) {
-            query.append(" AND M.Director LIKE '%").append(director).append("%'");
-        }
-        if (!actor.isEmpty()) {
-            query.append(" AND M.Actors LIKE '%").append(actor).append("%'");
-        }
-        if (genre != null && !genre.isEmpty()) {
-            query.append(" AND M.Genre='").append(genre).append("'");
-        }
+
+        resultLabel.setText(movies.length + "개의 영화");
+        verticalLayout.revalidate();
+        verticalLayout.repaint();
+    }
+
+    private String[] getGenres() {
+        ArrayList<String> genres = new ArrayList<>();
+        genres.add(DEFAULT_GENRE);
 
         try (Connection conn = DatabaseConnection.getUserConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(query.toString())) {
+             ResultSet rs = stmt.executeQuery("SELECT DISTINCT Genre FROM Movie")) {
 
-            tableModel.setRowCount(0);
-            int count = 0;
             while (rs.next()) {
-                String movieTitle = rs.getString("Title");
-                String rating = rs.getString("Rating");
-                int duration = rs.getInt("Duration");
-                Date startDate = rs.getDate("StartDate");
-                Time startTime = rs.getTime("StartTime");
-                String posterURL = rs.getString("PosterURL");
-
-                boolean isShowing = startDate != null && startDate.after(new java.util.Date());
-
-                String screeningInfo = startDate != null ? startDate.toString() + " " + startTime.toString() : "상영 정보 없음";
-
-                JButton bookButton = new JButton("예매하기");
-                bookButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        app.showPage(App.RESERVATION_PAGE);
-                    }
-                });
-
-                JPanel buttonPanel = new JPanel();
-                buttonPanel.add(isShowing ? bookButton : new JLabel("상영 종료"));
-
-                tableModel.addRow(new Object[]{
-                        movieTitle, rating, duration, isShowing ? "상영 중" : "상영 종료", new JLabel(new ImageIcon(new java.net.URL(posterURL))), screeningInfo, buttonPanel
-                });
-                count++;
+                String genre = rs.getString("Genre");
+                genres.add(genre);
             }
-            resultCountLabel.setText("검색된 영화 수: " + count);
-        } catch (SQLException | MalformedURLException e) {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
+
+        return genres.toArray(new String[0]);
     }
 
-    private void clearSearch() {
-        titleField.setText("");
-        directorField.setText("");
-        actorField.setText("");
-        genreComboBox.setSelectedIndex(0);
-        searchMovies();
+    private MovieObj[] getMovieData(String title, String director, String actor, String genre, LocalDate currentDate, LocalTime currentTime) {
+        ArrayList<MovieObj> movies = new ArrayList<>();
+        String query = getSearchQuery(title, director, actor, genre);
+
+        try (Connection conn = DatabaseConnection.getUserConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(query)) {
+
+            while (rs.next()) {
+                MovieObj movie = new MovieObj(rs);
+                movie.setScreeningStatus(currentDate, currentTime); // 현재 날짜와 시간에 기반한 상영 상태 설정
+                movies.add(movie);
+            }
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+        return movies.toArray(new MovieObj[0]);
+    }
+
+    private static String getSearchQuery(String title, String director, String actor, String genre) {
+        // 공백 제거 및 null 체크
+        title = (title != null && !title.trim().isEmpty()) ? title.trim() : null;
+        director = (director != null && !director.trim().isEmpty()) ? director.trim() : null;
+        actor = (actor != null && !actor.trim().isEmpty()) ? actor.trim() : null;
+        genre = (genre != null && !genre.trim().equals(DEFAULT_GENRE)) ? genre.trim() : null;
+
+        // 기본 SQL 문
+        String baseQuery = "SELECT Movie.*, ScreeningSchedule.StartDate, ScreeningSchedule.StartTime FROM Movie " +
+                "LEFT JOIN ScreeningSchedule ON Movie.MovieID = ScreeningSchedule.MovieID";
+
+        // 조건 리스트
+        ArrayList<String> conditions = new ArrayList<>();
+
+        // 조건 추가
+        if (title != null) {
+            conditions.add("Title LIKE '%" + title + "%'");
+        }
+        if (director != null) {
+            conditions.add("Director LIKE '%" + director + "%'");
+        }
+        if (actor != null) {
+            conditions.add("Actors LIKE '%" + actor + "%'");
+        }
+        if (genre != null) {
+            conditions.add("Genre = '" + genre + "'");
+        }
+
+        // WHERE 절 구성
+        if (!conditions.isEmpty()) {
+            baseQuery += " WHERE " + String.join(" AND ", conditions);
+        }
+
+        return baseQuery;
     }
 }

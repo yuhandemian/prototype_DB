@@ -5,28 +5,41 @@ import java.net.MalformedURLException;
 
 public class MovieDetail extends JPanel {
     private JLabel titleLabel, directorLabel, actorsLabel, genreLabel, ratingLabel, durationLabel, releaseDateLabel, synopsisLabel, scoreLabel;
-    private JLabel posterLabel;
+    private JLabel posterLabel, statusLabel;
     private JButton reserveButton;
     private App app;
+    private String currentMovieTitle;
 
     public MovieDetail(App app) {
         this.app = app;
         setLayout(new BorderLayout());
 
-        // 상단에 뒤로가기 버튼 배치
-        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton backButton = new JButton("뒤로가기");
-        topPanel.add(backButton);
-        add(topPanel, BorderLayout.NORTH);
-
-        // 뒤로가기 버튼 동작 정의
-        backButton.addActionListener(e -> app.showPage(App.SEARCH_PAGE));
+        // 사이드 바 추가
+        ComponentSideMenu sideMenu = new ComponentSideMenu(app);
+        add(sideMenu, BorderLayout.WEST);
 
         // 영화 상세 정보 패널
-        JPanel detailPanel = new JPanel(new GridLayout(10, 2));
-        detailPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel detailPanel = new JPanel();
+        detailPanel.setLayout(new BoxLayout(detailPanel, BoxLayout.Y_AXIS));
+        detailPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        posterLabel = new JLabel();
+        posterLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         titleLabel = new JLabel();
+        titleLabel.setFont(new Font("Lucida Grande", Font.BOLD, 24));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        statusLabel = new JLabel();
+        statusLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 18));
+        statusLabel.setForeground(new Color(0, 102, 255));
+        statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        scoreLabel = new JLabel();
+        scoreLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 18));
+        scoreLabel.setForeground(Color.ORANGE);
+        scoreLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         directorLabel = new JLabel();
         actorsLabel = new JLabel();
         genreLabel = new JLabel();
@@ -34,61 +47,86 @@ public class MovieDetail extends JPanel {
         durationLabel = new JLabel();
         releaseDateLabel = new JLabel();
         synopsisLabel = new JLabel();
-        scoreLabel = new JLabel();
-        posterLabel = new JLabel();
+        synopsisLabel.setVerticalAlignment(SwingConstants.TOP);
 
-        detailPanel.add(new JLabel("영화명:"));
+        reserveButton = new JButton("예매하기");
+        reserveButton.setBackground(new Color(0, 121, 255));
+        reserveButton.setForeground(Color.BLACK); // 글자 색을 검은색으로 설정
+        reserveButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        reserveButton.addActionListener(e -> {
+            app.setSelectedMovieTitle(currentMovieTitle);
+            app.showPage(App.RESERVATION_PAGE);
+        });
+
+        detailPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        detailPanel.add(posterLabel);
+        detailPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         detailPanel.add(titleLabel);
-        detailPanel.add(new JLabel("감독명:"));
+        detailPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        detailPanel.add(statusLabel);
+        detailPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        detailPanel.add(scoreLabel);
+        detailPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        detailPanel.add(new JLabel("감독:"));
         detailPanel.add(directorLabel);
-        detailPanel.add(new JLabel("배우명:"));
+        detailPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        detailPanel.add(new JLabel("배우:"));
         detailPanel.add(actorsLabel);
+        detailPanel.add(Box.createRigidArea(new Dimension(0, 5)));
         detailPanel.add(new JLabel("장르:"));
         detailPanel.add(genreLabel);
-        detailPanel.add(new JLabel("상영 등급:"));
+        detailPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        detailPanel.add(new JLabel("기본 정보:"));
         detailPanel.add(ratingLabel);
-        detailPanel.add(new JLabel("상영 시간:"));
         detailPanel.add(durationLabel);
-        detailPanel.add(new JLabel("개봉 날짜:"));
+        detailPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        detailPanel.add(new JLabel("개봉:"));
         detailPanel.add(releaseDateLabel);
-        detailPanel.add(new JLabel("영화 상세 설명:"));
+        detailPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        detailPanel.add(reserveButton);
+        detailPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+        detailPanel.add(new JLabel("줄거리:"));
         detailPanel.add(synopsisLabel);
-        detailPanel.add(new JLabel("평점:"));
-        detailPanel.add(scoreLabel);
 
         add(detailPanel, BorderLayout.CENTER);
-        add(posterLabel, BorderLayout.WEST);
-
-        // 예매하기 버튼
-        reserveButton = new JButton("예매하기");
-        reserveButton.addActionListener(e -> app.showPage(App.RESERVATION_PAGE));
-        add(reserveButton, BorderLayout.SOUTH);
     }
 
     public void displayMovieDetails(String movieTitle) {
-        try (Connection conn = DatabaseConnection.getUserConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT * FROM Movie WHERE Title = ?")) {
-            ps.setString(1, movieTitle);
+        this.currentMovieTitle = movieTitle;
+        try {
+            Connection conn = app.getConnection();
+            if (conn != null && !conn.isClosed()) {
+                try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM Movie WHERE Title = ?")) {
+                    ps.setString(1, movieTitle);
 
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    titleLabel.setText(rs.getString("Title"));
-                    directorLabel.setText(rs.getString("Director"));
-                    actorsLabel.setText(rs.getString("Actors"));
-                    genreLabel.setText(rs.getString("Genre"));
-                    ratingLabel.setText(rs.getString("Rating"));
-                    durationLabel.setText(rs.getInt("Duration") + " 분");
-                    releaseDateLabel.setText(rs.getString("ReleaseDate"));
-                    synopsisLabel.setText("<html>" + rs.getString("Synopsis") + "</html>");
-                    scoreLabel.setText(String.valueOf(rs.getDouble("Score")));
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            titleLabel.setText(rs.getString("Title"));
+                            directorLabel.setText(rs.getString("Director"));
+                            actorsLabel.setText(rs.getString("Actors"));
+                            genreLabel.setText(rs.getString("Genre"));
+                            ratingLabel.setText(rs.getString("Rating"));
+                            durationLabel.setText(rs.getInt("Duration") + " 분");
+                            releaseDateLabel.setText(rs.getString("ReleaseDate"));
+                            synopsisLabel.setText("<html>" + rs.getString("Synopsis") + "</html>");
+                            scoreLabel.setText("★ " + rs.getDouble("Score"));
 
-                    String posterURL = rs.getString("PosterURL");
-                    if (posterURL != null && !posterURL.isEmpty()) {
-                        posterLabel.setIcon(new ImageIcon(new java.net.URL(posterURL)));
-                    } else {
-                        posterLabel.setIcon(null);
+                            String status = "현재 상영중";
+                            statusLabel.setText(status);
+
+                            String posterURL = rs.getString("PosterURL");
+                            if (posterURL != null && !posterURL.isEmpty()) {
+                                ImageIcon icon = new ImageIcon(new java.net.URL(posterURL));
+                                Image image = icon.getImage().getScaledInstance(200, 300, Image.SCALE_SMOOTH);
+                                posterLabel.setIcon(new ImageIcon(image));
+                            } else {
+                                posterLabel.setIcon(null);
+                            }
+                        }
                     }
                 }
+            } else {
+                JOptionPane.showMessageDialog(this, "Connection is not valid", "Error", JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException | MalformedURLException e) {
             JOptionPane.showMessageDialog(this, "Error: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

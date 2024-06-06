@@ -7,59 +7,88 @@ public class ReservationDetail extends JPanel {
     private JButton changeMovieButton, changeTimeButton, cancelButton;
     private int ticketID;
     private App app;
+    private JoinedTicketObj currentTicket;
 
     public ReservationDetail(App app) {
         this.app = app;
-        setLayout(null);
+        setLayout(new BorderLayout());
 
-        JButton backButton = new JButton("뒤로가기");
-        backButton.setBounds(10, 10, 100, 30);
-        add(backButton);
+        // 사이드 메뉴 바 추가
+        ComponentSideMenu sideMenuBar = new ComponentSideMenu(app);
+        add(sideMenuBar, BorderLayout.WEST);
 
-        backButton.addActionListener(e -> app.showPage(App.MY_TICKET_PAGE));
+        JPanel detailPanel = new JPanel();
+        detailPanel.setLayout(new BoxLayout(detailPanel, BoxLayout.Y_AXIS));
+        detailPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        add(detailPanel, BorderLayout.CENTER);
+
+        JLabel titleLabel = new JLabel("예매 상세보기");
+        titleLabel.setFont(new Font("Lucida Grande", Font.BOLD, 24));
+        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detailPanel.add(titleLabel);
 
         movieNameLabel = new JLabel();
-        movieNameLabel.setBounds(10, 50, 300, 30);
-        add(movieNameLabel);
+        movieNameLabel.setFont(new Font("Lucida Grande", Font.BOLD, 18));
+        movieNameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detailPanel.add(movieNameLabel);
+
+        detailPanel.add(Box.createRigidArea(new Dimension(0, 10)));
 
         bookingIdLabel = new JLabel();
-        bookingIdLabel.setBounds(10, 90, 300, 30);
-        add(bookingIdLabel);
+        bookingIdLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detailPanel.add(bookingIdLabel);
 
         scheduleLabel = new JLabel();
-        scheduleLabel.setBounds(10, 130, 300, 30);
-        add(scheduleLabel);
+        scheduleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detailPanel.add(scheduleLabel);
 
         seatLabel = new JLabel();
-        seatLabel.setBounds(10, 170, 300, 30);
-        add(seatLabel);
+        seatLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detailPanel.add(seatLabel);
 
         standardPriceLabel = new JLabel();
-        standardPriceLabel.setBounds(10, 210, 300, 30);
-        add(standardPriceLabel);
+        standardPriceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detailPanel.add(standardPriceLabel);
 
         salePriceLabel = new JLabel();
-        salePriceLabel.setBounds(10, 250, 300, 30);
-        add(salePriceLabel);
+        salePriceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detailPanel.add(salePriceLabel);
 
         issuedLabel = new JLabel();
-        issuedLabel.setBounds(10, 290, 300, 30);
-        add(issuedLabel);
+        issuedLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        detailPanel.add(issuedLabel);
+
+        detailPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         changeMovieButton = new JButton("영화 변경");
-        changeMovieButton.setBounds(10, 330, 100, 30);
-        add(changeMovieButton);
+        changeMovieButton.setBackground(Color.WHITE);
+        buttonPanel.add(changeMovieButton);
 
         changeTimeButton = new JButton("시간 변경");
-        changeTimeButton.setBounds(120, 330, 100, 30);
-        add(changeTimeButton);
+        changeTimeButton.setBackground(Color.WHITE);
+        buttonPanel.add(changeTimeButton);
 
         cancelButton = new JButton("예매 취소");
-        cancelButton.setBounds(230, 330, 100, 30);
-        add(cancelButton);
+        cancelButton.setBackground(Color.WHITE);
+        cancelButton.setForeground(Color.RED);
+        buttonPanel.add(cancelButton);
 
-        changeMovieButton.addActionListener(e -> changeMovie());
-        changeTimeButton.addActionListener(e -> changeTime());
+        detailPanel.add(buttonPanel);
+
+        changeMovieButton.addActionListener(e -> {
+            app.setCurrentTicket(currentTicket);
+            app.showPage(App.MODIFY_RESERVATION_PAGE);
+        });
+
+        changeTimeButton.addActionListener(e -> {
+            app.setCurrentTicket(currentTicket);
+            app.showPage(App.MODIFY_RESERVATION_PAGE);
+        });
+
         cancelButton.addActionListener(e -> cancelTicket());
     }
 
@@ -68,44 +97,31 @@ public class ReservationDetail extends JPanel {
 
         try (Connection conn = DatabaseConnection.getUserConnection();
              PreparedStatement ps = conn.prepareStatement(
-                     "SELECT M.Title, T.BookingID, S.StartDate, S.StartTime, T.SeatID, T.StandardPrice, T.SalePrice, T.IsIssued " +
+                     "SELECT T.TicketID, T.ScheduleID, T.TheaterID, T.SeatID, T.BookingID, M.Title, S.StartDate, S.StartTime, TH.TheaterName, SE.SeatName, T.StandardPrice, T.SalePrice, T.IsIssued " +
                              "FROM Ticket T " +
                              "JOIN ScreeningSchedule S ON T.ScheduleID = S.ScheduleID " +
                              "JOIN Movie M ON S.MovieID = M.MovieID " +
+                             "JOIN Theater TH ON T.TheaterID = TH.TheaterID " +
+                             "JOIN Seat SE ON T.SeatID = SE.SeatID " +
                              "WHERE T.TicketID = ?")) {
             ps.setInt(1, ticketID);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    String movieTitle = rs.getString("Title");
-                    int bookingID = rs.getInt("BookingID");
-                    Date startDate = rs.getDate("StartDate");
-                    Time startTime = rs.getTime("StartTime");
-                    int seatID = rs.getInt("SeatID");
-                    double standardPrice = rs.getDouble("StandardPrice");
-                    double salePrice = rs.getDouble("SalePrice");
-                    boolean isIssued = rs.getBoolean("IsIssued");
+                    currentTicket = new JoinedTicketObj(rs);
 
-                    movieNameLabel.setText("영화명: " + movieTitle);
-                    bookingIdLabel.setText("예매 번호: " + bookingID);
-                    scheduleLabel.setText("상영 일정: " + startDate + " " + startTime);
-                    seatLabel.setText("좌석: " + seatID);
-                    standardPriceLabel.setText("표준 가격: " + standardPrice);
-                    salePriceLabel.setText("판매 가격: " + salePrice);
-                    issuedLabel.setText("티켓 발행 여부: " + (isIssued ? "발행됨" : "발행되지 않음"));
+                    movieNameLabel.setText(currentTicket.MovieTitle);
+                    bookingIdLabel.setText("예매번호: " + currentTicket.BookingID);
+                    scheduleLabel.setText("상영 날짜: " + currentTicket.ScheduleDate + " " + currentTicket.ScheduleTime);
+                    seatLabel.setText("좌석: " + currentTicket.TheaterName + " " + currentTicket.SeatName);
+                    standardPriceLabel.setText("표준가격: " + currentTicket.StandardPrice + "원");
+                    salePriceLabel.setText("판매가격: " + currentTicket.SalePrice + "원");
+                    issuedLabel.setText("발행여부: " + (currentTicket.IsIssued.equals("1") ? "Yes" : "No"));
                 }
             }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "Error loading ticket details: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private void changeMovie() {
-        JOptionPane.showMessageDialog(this, "영화 변경 기능은 아직 구현되지 않았습니다.", "영화 변경", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-    private void changeTime() {
-        JOptionPane.showMessageDialog(this, "시간 변경 기능은 아직 구현되지 않았습니다.", "시간 변경", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void cancelTicket() {
