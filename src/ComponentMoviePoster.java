@@ -19,6 +19,7 @@ public class ComponentMoviePoster extends JPanel {
 	public ComponentMoviePoster(App app, MovieObj movie) {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		setBounds(6, 5, 165, 249);
+//		this.setBorder(new Border());
 		setBackground(new Color(255, 255, 255));
 		
 		// TODO: 이미지 추가

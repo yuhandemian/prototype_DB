@@ -135,6 +135,7 @@ public class SearchPage extends JPanel {
 		// 스크롤 뷰 구현
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setBounds(6, 179, 636, 403);
+		scrollPane.setBorder(null);
 		windowLayout.add(scrollPane);
 		
 		verticalLayout = new JPanel();
