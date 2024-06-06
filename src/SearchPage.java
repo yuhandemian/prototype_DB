@@ -3,12 +3,14 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.*;
 
 public class SearchPage extends JPanel {
+	private static final long serialVersionUID = 1L;
 	
 	private JTextField movieNameTextField;
 	private JTextField diractoNameTextField;
@@ -96,12 +98,7 @@ public class SearchPage extends JPanel {
 		resetButton.setBackground(Color.WHITE);
 		resetButton.setFont(new Font("Lucida Grande", Font.PLAIN, 11));
 		
-		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(6, 179, 636, 403);
-		windowLayout.add(scrollPane);
-		
-		
-		JLabel lblNewLabel = new JLabel("New label");
+		JLabel lblNewLabel = new JLabel("0개 검색");
 		lblNewLabel.setBounds(6, 153, 50, 14);
 		windowLayout.add(lblNewLabel);
 		lblNewLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 11));
@@ -118,9 +115,20 @@ public class SearchPage extends JPanel {
 			}
 		});
 		
+		// 스크롤 뷰 구현
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(6, 179, 636, 403);
+		windowLayout.add(scrollPane);
+		
+		JPanel verticalLayout = new JPanel();
+		scrollPane.setViewportView(verticalLayout);
+		verticalLayout.setBackground(new Color(255, 255, 255));
+		verticalLayout.setMaximumSize(new Dimension(636, 987654321));
+		verticalLayout.setLayout(new GridLayout(0, 3, 10, 10));
+		
 		for (int i = 0; i < 10; i++) {
-			ComponentMoviePoster poster1 = new ComponentMoviePoster();
-			scrollPane.add(poster1);
+			ComponentMoviePoster poster1 = new ComponentMoviePoster(app);
+			verticalLayout.add(poster1);
 		}
     }
 }

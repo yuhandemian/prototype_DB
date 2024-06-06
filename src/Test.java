@@ -1,37 +1,24 @@
 import java.awt.EventQueue;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
-import javax.swing.JComboBox;
-import java.awt.FlowLayout;
-import javax.swing.JTextField;
 import javax.swing.JLabel;
 import java.awt.Font;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import javax.swing.JSeparator;
 import javax.swing.JButton;
-import java.awt.event.ActionListener;
-import java.awt.event.ActionEvent;
 import javax.swing.JScrollPane;
 import javax.swing.BoxLayout;
 import java.awt.Dimension;
-import javax.swing.Box;
-import java.awt.Button;
-import javax.swing.JScrollBar;
-import java.awt.ScrollPane;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import java.awt.GridLayout;
+import java.awt.FlowLayout;
 
 public class Test extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
-	private JTextField movieNameTextField;
-	private JTextField diractoNameTextField;
-	private JTextField actorNameTextField;
-	private JComboBox genreComboBox;
 
 	/**
 	 * Launch the application.
@@ -75,15 +62,10 @@ public class Test extends JFrame {
 		windowLayout.setLayout(null);
 		
 		// 페이지, 헤더 구성.
-		JLabel lblNewLabel = new JLabel("예매된 티켓");
-		lblNewLabel.setFont(new Font("Lucida Grande", Font.BOLD, 24));
-		lblNewLabel.setBounds(23, 25, 149, 30);
-		windowLayout.add(lblNewLabel);
-		
-		JButton btnNewButton = new JButton("선택된 예매 삭제");
-		btnNewButton.setForeground(new Color(255, 0, 0));
-		btnNewButton.setBounds(505, 25, 117, 29);
-		windowLayout.add(btnNewButton);
+		JLabel titleLabel = new JLabel("영화 예매");
+		titleLabel.setFont(new Font("Lucida Grande", Font.BOLD, 24));
+		titleLabel.setBounds(23, 25, 149, 30);
+		windowLayout.add(titleLabel);
 		
 		JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
@@ -92,52 +74,65 @@ public class Test extends JFrame {
 		windowLayout.add(scrollPane);
 		
 		JPanel verticalLayout = new JPanel();
+		verticalLayout.setBackground(new Color(255, 255, 255));
 		scrollPane.setViewportView(verticalLayout);
+		verticalLayout.setLayout(new BoxLayout(verticalLayout, BoxLayout.Y_AXIS));
+		
+		// 스크롤 내부 구조
+		JLabel subTitle1 = new JLabel("영화 선택");
+		subTitle1.setFont(new Font("Lucida Grande", Font.BOLD, 20));
+		verticalLayout.add(subTitle1);
+		
+		JComboBox comboBox = new JComboBox();
+		verticalLayout.add(comboBox);
+		
+		JLabel subTitle2 = new JLabel("시간 선택");
+		subTitle2.setFont(new Font("Lucida Grande", Font.BOLD, 20));
+		verticalLayout.add(subTitle2);
 		scrollPane.setBackground(new Color(255, 255, 255));
-		verticalLayout.setLayout(null);
 		
+		JScrollPane timeLayoutScroll = new JScrollPane();
+		verticalLayout.add(timeLayoutScroll);
 		
-		// 카드 레이아웃.
-		JPanel cardLayout = new JPanel();
-		cardLayout.setBackground(new Color(242, 242, 242));
-		cardLayout.setBounds(6, 5, 583, 148);
-		verticalLayout.add(cardLayout);
-		cardLayout.setLayout(null);
+		JPanel timeLayout = new JPanel();
+		timeLayout.setBackground(new Color(255, 255, 255));
+		timeLayoutScroll.setViewportView(timeLayout);
+		timeLayout.setLayout(new BoxLayout(timeLayout, BoxLayout.X_AXIS));
 		
-		JButton btnNewButton_1 = new JButton("영화 변경");
-		btnNewButton_1.setBounds(334, 113, 80, 29);
-		cardLayout.add(btnNewButton_1);
+		// 시간관련 버튼 추가.
+		for (int i = 0; i < 10; i++) {
+			timeLayout.add(new JButton("시간 추가"));
+		}
 		
-		JButton btnNewButton_1_2 = new JButton("시간 변경");
-		btnNewButton_1_2.setBounds(412, 113, 80, 29);
-		cardLayout.add(btnNewButton_1_2);
+		JLabel subTitle3 = new JLabel("좌석 선택");
+		subTitle3.setFont(new Font("Lucida Grande", Font.BOLD, 20));
+		verticalLayout.add(subTitle3);
 		
-		JButton btnNewButton_1_1 = new JButton("영화 삭제");
-		btnNewButton_1_1.setForeground(new Color(255, 0, 0));
-		btnNewButton_1_1.setBounds(486, 113, 80, 29);
-		cardLayout.add(btnNewButton_1_1);
+		final int SEATS_ROW = 8;
+		final int SEATS_COL = 10;
 		
-		JCheckBox chckbxNewCheckBox = new JCheckBox("");
-		chckbxNewCheckBox.setBounds(538, 10, 28, 23);
-		cardLayout.add(chckbxNewCheckBox);
+		JPanel seatsLayout = new JPanel();
+		seatsLayout.setBackground(new Color(255, 255, 255));
+		verticalLayout.add(seatsLayout);
+		seatsLayout.setLayout(new GridLayout(SEATS_ROW, SEATS_COL, 10, 10));
 		
-		JLabel ticketTitleLabel = new JLabel("Ticket Title Label");
-		ticketTitleLabel.setFont(new Font("Lucida Grande", Font.BOLD, 16));
-		ticketTitleLabel.setBounds(17, 10, 482, 16);
-		cardLayout.add(ticketTitleLabel);
+		for (int i = 0; i < SEATS_ROW * SEATS_COL; i++) {
+			JButton btnNewButton = new JButton("X");
+			btnNewButton.setPreferredSize(new Dimension(10, 10)); 
+			seatsLayout.add(btnNewButton);
+		}
 		
-		JLabel locationLabel = new JLabel("New label");
-		locationLabel.setForeground(new Color(127, 127, 127));
-		locationLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 16));
-		locationLabel.setBounds(17, 36, 482, 16);
-		cardLayout.add(locationLabel);
+		JPanel costLayout = new JPanel();
+		costLayout.setBackground(new Color(255, 255, 255));
+		verticalLayout.add(costLayout);
+		costLayout.setLayout(new FlowLayout(FlowLayout.LEADING, 5, 5));
 		
-		JLabel costLabel = new JLabel("7000원");
-		costLabel.setForeground(new Color(127, 127, 127));
-		costLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 12));
-		costLabel.setBounds(17, 64, 482, 16);
-		cardLayout.add(costLabel);
+		JLabel subsubTitle = new JLabel("티켓 가격");
+		subsubTitle.setFont(new Font("Lucida Grande", Font.BOLD, 12));
+		costLayout.add(subsubTitle);
 		
-		
+		JLabel ticketCostLabel = new JLabel("7000원");
+		ticketCostLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 12));
+		costLayout.add(ticketCostLabel);
 	}
 }
