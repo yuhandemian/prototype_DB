@@ -1,7 +1,9 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
@@ -14,10 +16,12 @@ public class ComponentTicketCard extends JPanel {
 	/**
 	 * Create the panel.
 	 */
-	public ComponentTicketCard(App app) {
+	public ComponentTicketCard(App app, JoinedTicketObj ticket) {
 		setBackground(new Color(242, 242, 242));
 		setBounds(6, 5, 583, 160);
 		setPreferredSize(new Dimension(580, 160));
+		setBackground(new Color(255, 255, 255));
+//		setBorder(BorderFactory.createEtchedBorder());
 		setLayout(null);
 		
 		JButton btnChangeMovie = new JButton("영화 변경");
@@ -37,23 +41,30 @@ public class ComponentTicketCard extends JPanel {
 		chckbxNewCheckBox.setBounds(538, 10, 28, 23);
 		add(chckbxNewCheckBox);
 		
-		JLabel ticketTitleLabel = new JLabel("Ticket Title Label");
+		JLabel ticketTitleLabel = new JLabel(ticket.MovieTitle);
 		ticketTitleLabel.setBounds(17, 10, 482, 16);
 		ticketTitleLabel.setFont(new Font("Lucida Grande", Font.BOLD, 16));
 		add(ticketTitleLabel);
 		
-		JLabel locationLabel = new JLabel("New label");
+		JLabel locationLabel = new JLabel(ticket.ScheduleDate + "  " + ticket.ScheduleTime + "  " + ticket.TheaterName + "  " + ticket.SeatName);
 		locationLabel.setBounds(17, 36, 482, 16);
 		locationLabel.setForeground(new Color(127, 127, 127));
 		locationLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 16));
 		add(locationLabel);
 		
-		JLabel costLabel = new JLabel("7000원");
+		JLabel costLabel = new JLabel(ticket.SalePrice + "원");
 		costLabel.setBounds(17, 64, 482, 16);
 		costLabel.setForeground(new Color(127, 127, 127));
 		costLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 12));
 		add(costLabel);
 		
+		// Event Listeners
+		addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+            	app.showPage(App.RESERVATION_DETAIL);
+            }
+        });
 		btnChangeMovie.addActionListener(e -> app.showPage(App.RESERVATION_PAGE));
 		btnChangeTime.addActionListener(e -> app.showPage(App.RESERVATION_PAGE));
 	}
