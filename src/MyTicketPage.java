@@ -17,6 +17,7 @@ public class MyTicketPage extends JPanel {
     
     private JPanel verticalLayout;
 
+    // Todo: remove Ticket;
 	public MyTicketPage(App app) {
     	setBackground(new Color(255, 255, 255));
     	setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
@@ -51,6 +52,7 @@ public class MyTicketPage extends JPanel {
 		
 		verticalLayout = new JPanel();
 		scrollPane.setViewportView(verticalLayout);
+		verticalLayout.setBorder(null);
 		verticalLayout.setBackground(new Color(255, 255, 255));
 		verticalLayout.setLayout(new GridLayout(0, 1, 10, 10));
 		

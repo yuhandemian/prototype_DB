@@ -21,7 +21,7 @@ public class ComponentTicketCard extends JPanel {
 		setBounds(6, 5, 583, 160);
 		setPreferredSize(new Dimension(580, 160));
 		setBackground(new Color(255, 255, 255));
-		setBorder(BorderFactory.createEtchedBorder());
+//		setBorder(BorderFactory.createEtchedBorder());
 		setLayout(null);
 		
 		JButton btnChangeMovie = new JButton("영화 변경");
