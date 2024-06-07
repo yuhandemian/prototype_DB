@@ -30,6 +30,7 @@ public class App extends JFrame {
     private String selectedMovieTitle;
     private JoinedTicketObj currentTicket;
     private int currentUserId;
+    private UserBookingDetailsPage userBookingDetailsPage;
 
     public App() {
         setTitle("Movie Booking System");
@@ -82,6 +83,11 @@ public class App extends JFrame {
                 modifyReservationPage.setTicketDetails(currentTicket); // Set the ticket details
                 mainPanel.add(modifyReservationPage, MODIFY_RESERVATION_PAGE);
                 break;
+            case "UserBookingDetailsPage":
+                if (userBookingDetailsPage == null) userBookingDetailsPage = new UserBookingDetailsPage(this);
+                mainPanel.add(userBookingDetailsPage, "UserBookingDetailsPage");
+                break;
+           
         }
         cardLayout.show(mainPanel, page);
     }
@@ -136,6 +142,9 @@ public class App extends JFrame {
     public void setCurrentUserId(int userId) {
         this.currentUserId = userId;
     }
+    public void showUserBookingDetails() {
+        showPage("UserBookingDetailsPage");
+    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
@@ -144,5 +153,6 @@ public class App extends JFrame {
             app.setConnection(conn);
             app.showPage(LOGIN_PAGE); // 초기 페이지 설정
         });
+        
     }
 }

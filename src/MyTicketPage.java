@@ -33,7 +33,6 @@ public class MyTicketPage extends JPanel {
         add(windowLayout, BorderLayout.CENTER);
         windowLayout.setLayout(null);
         
-        // 페이지, 헤더 구성.
         JLabel titleLabel = new JLabel("예매된 티켓");
         titleLabel.setFont(new Font("Lucida Grande", Font.BOLD, 24));
         titleLabel.setBounds(23, 25, 149, 30);
@@ -73,7 +72,7 @@ public class MyTicketPage extends JPanel {
                             ticketCard.removeReservation(ticketCard.getTicketID());
                         }
                         JOptionPane.showMessageDialog(MyTicketPage.this, "선택된 예매가 삭제되었습니다.", "Success", JOptionPane.INFORMATION_MESSAGE);
-                        app.showPage(App.MY_TICKET_PAGE); // 삭제 후 페이지 갱신
+                        updateTicketCards(app); // 삭제 후 페이지 갱신
                     }
                 } else {
                     JOptionPane.showMessageDialog(MyTicketPage.this, "선택된 예매가 없습니다.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -81,7 +80,6 @@ public class MyTicketPage extends JPanel {
             }
         });
         
-        // 카드 레이아웃
         updateTicketCards(app);
     }
     

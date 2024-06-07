@@ -3,12 +3,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
 import javax.swing.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.HashMap;
 
 public class ReservationPage extends JPanel {
     private static final long serialVersionUID = 1L;
     private JComboBox<String> movieComboBox;
     private JComboBox<String> dateComboBox;
-    private JComboBox<String> timeComboBox;
+    private JPanel timePanel;
     private JButton[][] seatButtons;
     private JLabel ticketCostLabel;
     private App app;
@@ -17,6 +20,7 @@ public class ReservationPage extends JPanel {
     private int selectedSeatID;
     private int ticketCost = 7000;
     private String selectedSeatName;
+    private HashMap<JButton, Integer> timeButtonToScheduleIDMap = new HashMap<>();
 
     public ReservationPage(App app) {
         this.app = app;
@@ -48,7 +52,6 @@ public class ReservationPage extends JPanel {
         scrollPane.setViewportView(verticalLayout);
         verticalLayout.setLayout(new BoxLayout(verticalLayout, BoxLayout.Y_AXIS));
 
-        // 스크롤 내부 구조
         JLabel subTitle1 = new JLabel("영화 선택");
         subTitle1.setFont(new Font("Lucida Grande", Font.BOLD, 20));
         verticalLayout.add(subTitle1);
@@ -69,8 +72,10 @@ public class ReservationPage extends JPanel {
         verticalLayout.add(subTitle3);
         scrollPane.setBackground(new Color(255, 255, 255));
 
-        timeComboBox = new JComboBox<>();
-        verticalLayout.add(timeComboBox);
+        timePanel = new JPanel();
+        timePanel.setBackground(new Color(255, 255, 255));
+        timePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+        verticalLayout.add(timePanel);
 
         JLabel subTitle4 = new JLabel("좌석 선택");
         subTitle4.setFont(new Font("Lucida Grande", Font.BOLD, 20));
@@ -89,6 +94,8 @@ public class ReservationPage extends JPanel {
             for (int j = 0; j < SEATS_COL; j++) {
                 seatButtons[i][j] = new JButton("X");
                 seatButtons[i][j].setPreferredSize(new Dimension(10, 10));
+                seatButtons[i][j].setBackground(Color.WHITE);
+                seatButtons[i][j].setForeground(Color.BLACK);
                 seatsLayout.add(seatButtons[i][j]);
 
                 final int row = i;
@@ -111,6 +118,8 @@ public class ReservationPage extends JPanel {
         costLayout.add(ticketCostLabel);
 
         JButton reserveButton = new JButton("예매하기");
+        reserveButton.setForeground(Color.BLACK);
+        reserveButton.setBackground(new Color(0, 121, 255));
         reserveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -120,12 +129,13 @@ public class ReservationPage extends JPanel {
         verticalLayout.add(reserveButton);
 
         JButton cancelButton = new JButton("취소");
+        cancelButton.setForeground(Color.BLACK);
+        cancelButton.setBackground(new Color(0, 121, 255));
         cancelButton.addActionListener(e -> app.showPage(App.SEARCH_PAGE));
         verticalLayout.add(cancelButton);
 
         movieComboBox.addActionListener(e -> loadDatesForSelectedMovie());
         dateComboBox.addActionListener(e -> loadTimesForSelectedMovie());
-        timeComboBox.addActionListener(e -> loadSeatsForSelectedTime());
     }
 
     private void loadMovies() {
@@ -164,36 +174,50 @@ public class ReservationPage extends JPanel {
             ps.setString(1, selectedMovie);
             ps.setString(2, selectedDate);
             try (ResultSet rs = ps.executeQuery()) {
-                timeComboBox.removeAllItems();
+                timePanel.removeAll();
+                timeButtonToScheduleIDMap.clear();
                 while (rs.next()) {
-                    timeComboBox.addItem(rs.getString("StartTime"));
+                    int scheduleID = rs.getInt("ScheduleID");
+                    String startTime = rs.getString("StartTime");
+
+                    JButton timeButton = new JButton(startTime);
+                    timeButton.setForeground(Color.BLACK);
+                    timeButton.setBackground(Color.WHITE);
+                    timeButton.addActionListener(e -> loadSeatsForSelectedTime(scheduleID));
+                    timePanel.add(timeButton);
+
+                    // Store the scheduleID for this time button
+                    timeButtonToScheduleIDMap.put(timeButton, scheduleID);
                 }
+                timePanel.revalidate();
+                timePanel.repaint();
             }
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(this, "상영 시간을 불러오는 중 오류 발생: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void loadSeatsForSelectedTime() {
-        String selectedTime = (String) timeComboBox.getSelectedItem();
-        String selectedMovie = (String) movieComboBox.getSelectedItem();
-        String selectedDate = (String) dateComboBox.getSelectedItem();
-
+    private void loadSeatsForSelectedTime(int scheduleID) {
+        selectedScheduleID = scheduleID;
+        LocalDate currentDate = app.getCurrentDate();
+        LocalTime currentTime = app.getCurrentTime();
+        
         try (Connection conn = DatabaseConnection.getUserConnection();
-             PreparedStatement ps1 = conn.prepareStatement(
-                     "SELECT ScheduleID, TheaterID FROM ScreeningSchedule WHERE MovieID = (SELECT MovieID FROM Movie WHERE Title = ?) AND StartTime = ? AND StartDate = ?")) {
-            ps1.setString(1, selectedMovie);
-            ps1.setString(2, selectedTime);
-            ps1.setString(3, selectedDate);
+             PreparedStatement ps = conn.prepareStatement("SELECT TheaterID, StartDate, StartTime FROM ScreeningSchedule WHERE ScheduleID = ?")) {
+            ps.setInt(1, scheduleID);
 
             int theaterID = 0;
-
-            try (ResultSet rs1 = ps1.executeQuery()) {
-                if (rs1.next()) {
-                    selectedScheduleID = rs1.getInt("ScheduleID");
-                    theaterID = rs1.getInt("TheaterID");
+            LocalDate movieDate = null;
+            LocalTime movieTime = null;
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    theaterID = rs.getInt("TheaterID");
+                    movieDate = rs.getDate("StartDate").toLocalDate();
+                    movieTime = rs.getTime("StartTime").toLocalTime();
                 }
             }
+
+            boolean isPastShow = movieDate.isBefore(currentDate) || (movieDate.isEqual(currentDate) && movieTime.isBefore(currentTime));
 
             // 좌석 초기화
             for (int i = 0; i < seatButtons.length; i++) {
@@ -201,6 +225,7 @@ public class ReservationPage extends JPanel {
                     seatButtons[i][j].setText("X");
                     seatButtons[i][j].setEnabled(false);
                     seatButtons[i][j].setBackground(Color.WHITE);
+                    seatButtons[i][j].setForeground(Color.BLACK);
                 }
             }
 
@@ -216,23 +241,31 @@ public class ReservationPage extends JPanel {
                         int row = (seatID - 1) / 10;
                         int col = (seatID - 1) % 10;
 
-                        seatButtons[row][col].setText(seatName);
-                        seatButtons[row][col].setEnabled(isAvailable);
-                        seatButtons[row][col].setBackground(isAvailable ? Color.WHITE : Color.GRAY);
+                        if (isPastShow) {
+                            seatButtons[row][col].setText("X");
+                            seatButtons[row][col].setEnabled(false);
+                            seatButtons[row][col].setBackground(Color.GRAY);
+                        } else {
+                            seatButtons[row][col].setText(seatName);
+                            seatButtons[row][col].setEnabled(isAvailable);
+                            seatButtons[row][col].setBackground(isAvailable ? Color.WHITE : Color.GRAY);
+                        }
                     }
 
                     // 이미 예약된 좌석 불러오기
-                    try (PreparedStatement ps3 = conn.prepareStatement(
-                            "SELECT SeatID FROM Ticket WHERE ScheduleID = ?")) {
-                        ps3.setInt(1, selectedScheduleID);
+                    if (!isPastShow) {
+                        try (PreparedStatement ps3 = conn.prepareStatement(
+                                "SELECT SeatID FROM Ticket WHERE ScheduleID = ?")) {
+                            ps3.setInt(1, selectedScheduleID);
 
-                        try (ResultSet rs3 = ps3.executeQuery()) {
-                            while (rs3.next()) {
-                                int seatID = rs3.getInt("SeatID");
-                                int row = (seatID - 1) / 10;
-                                int col = (seatID - 1) % 10;
-                                seatButtons[row][col].setBackground(Color.GRAY);
-                                seatButtons[row][col].setEnabled(false);
+                            try (ResultSet rs3 = ps3.executeQuery()) {
+                                while (rs3.next()) {
+                                    int seatID = rs3.getInt("SeatID");
+                                    int row = (seatID - 1) / 10;
+                                    int col = (seatID - 1) % 10;
+                                    seatButtons[row][col].setBackground(Color.GRAY);
+                                    seatButtons[row][col].setEnabled(false);
+                                }
                             }
                         }
                     }
@@ -265,8 +298,8 @@ public class ReservationPage extends JPanel {
 
     private void reserveTicket() {
         String selectedMovie = (String) movieComboBox.getSelectedItem();
-        String selectedTime = (String) timeComboBox.getSelectedItem();
         String selectedDate = (String) dateComboBox.getSelectedItem();
+        String selectedTime = getSelectedTimeFromScheduleID(selectedScheduleID);
 
         int confirm = JOptionPane.showConfirmDialog(this, "영화: " + selectedMovie + "\n날짜: " + selectedDate + "\n시간: " + selectedTime + "\n좌석: " + selectedSeatName + "\n가격: " + ticketCost + "원\n예매를 확정하시겠습니까?", "예매 확인", JOptionPane.YES_NO_OPTION);
         if (confirm != JOptionPane.YES_OPTION) {
@@ -325,4 +358,21 @@ public class ReservationPage extends JPanel {
             JOptionPane.showMessageDialog(this, "예매 중 오류 발생: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
+    private String getSelectedTimeFromScheduleID(int scheduleID) {
+        try (Connection conn = DatabaseConnection.getUserConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT StartTime FROM ScreeningSchedule WHERE ScheduleID = ?")) {
+            ps.setInt(1, scheduleID);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("StartTime");
+                }
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "시간 정보를 불러오는 중 오류 발생: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        return null;
+    }
 }
+
+       

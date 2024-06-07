@@ -170,7 +170,7 @@ public class LoginPage extends JPanel {
     private String[] generateTimes() {
         List<String> times = new ArrayList<>();
         for (int hour = 0; hour < 24; hour++) {
-            for (int minute = 0; minute < 60; minute++) {
+            for (int minute = 0; minute < 60; minute += 30) {
                 times.add(String.format("%02d:%02d", hour, minute));
             }
         }

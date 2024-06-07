@@ -1,8 +1,5 @@
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.Connection;
@@ -12,7 +9,6 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import javax.swing.*;
 
 public class SearchPage extends JPanel {
     private static final long serialVersionUID = 1L;
@@ -28,7 +24,7 @@ public class SearchPage extends JPanel {
 
     public SearchPage(App app) {
         setBackground(new Color(255, 255, 255));
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+        setLayout(new BorderLayout());
 
         ComponentSideMenu sideMenuBar = new ComponentSideMenu(app);
         add(sideMenuBar, BorderLayout.WEST);
@@ -36,90 +32,92 @@ public class SearchPage extends JPanel {
         JPanel windowLayout = new JPanel();
         windowLayout.setBackground(new Color(255, 255, 255));
         windowLayout.setPreferredSize(new Dimension(650, getHeight()));
+        windowLayout.setLayout(new BorderLayout());
         add(windowLayout, BorderLayout.CENTER);
-        windowLayout.setLayout(null);
 
-        JPanel panel = new JPanel();
-        panel.setBounds(50, 20, 550, 150);
-        windowLayout.add(panel);
-        panel.setBackground(new Color(255, 255, 255));
-        panel.setLayout(null);
+        JPanel searchPanel = new JPanel();
+        searchPanel.setLayout(new GridBagLayout());
+        searchPanel.setBackground(Color.WHITE);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.WEST;
 
-        // 영화 이름 입력 상자
         JLabel movieNameLabel = new JLabel("영화명:");
-        movieNameLabel.setBounds(10, 10, 80, 25);
-        panel.add(movieNameLabel);
-        movieNameTextField = new JTextField();
-        movieNameTextField.setBounds(100, 10, 200, 25);
-        panel.add(movieNameTextField);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        searchPanel.add(movieNameLabel, gbc);
+        movieNameTextField = new JTextField(20);
+        gbc.gridx = 1;
+        searchPanel.add(movieNameTextField, gbc);
 
-        // 감독 이름 입력 상자
         JLabel directorNameLabel = new JLabel("감독명:");
-        directorNameLabel.setBounds(10, 40, 80, 25);
-        panel.add(directorNameLabel);
-        directorNameTextField = new JTextField();
-        directorNameTextField.setBounds(100, 40, 200, 25);
-        panel.add(directorNameTextField);
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        searchPanel.add(directorNameLabel, gbc);
+        directorNameTextField = new JTextField(20);
+        gbc.gridx = 1;
+        searchPanel.add(directorNameTextField, gbc);
 
-        // 배우 이름 입력 상자
         JLabel actorNameLabel = new JLabel("배우명:");
-        actorNameLabel.setBounds(10, 70, 80, 25);
-        panel.add(actorNameLabel);
-        actorNameTextField = new JTextField();
-        actorNameTextField.setBounds(100, 70, 200, 25);
-        panel.add(actorNameTextField);
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        searchPanel.add(actorNameLabel, gbc);
+        actorNameTextField = new JTextField(20);
+        gbc.gridx = 1;
+        searchPanel.add(actorNameTextField, gbc);
 
-        // 장르 선택 상자
         JLabel genreLabel = new JLabel("장르:");
-        genreLabel.setBounds(10, 100, 80, 25);
-        panel.add(genreLabel);
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        searchPanel.add(genreLabel, gbc);
         genreComboBox = new JComboBox<>(genreName);
-        genreComboBox.setBounds(100, 100, 200, 25);
-        panel.add(genreComboBox);
+        gbc.gridx = 1;
+        searchPanel.add(genreComboBox, gbc);
 
-        // 검색 버튼
         JButton searchButton = new JButton("검색");
-        searchButton.setBounds(310, 10, 80, 25);
-        panel.add(searchButton);
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.gridheight = 2;
+        searchPanel.add(searchButton, gbc);
 
-        // 취소 버튼
         JButton resetButton = new JButton("취소");
-        resetButton.setBounds(310, 40, 80, 25);
-        panel.add(resetButton);
+        gbc.gridy = 2;
+        searchPanel.add(resetButton, gbc);
+
+        windowLayout.add(searchPanel, BorderLayout.NORTH);
 
         JLabel resultLabel = new JLabel("0개의 영화");
         resultLabel.setFont(new Font("Lucida Grande", Font.PLAIN, 14));
-        resultLabel.setBounds(50, 180, 100, 30);
-        windowLayout.add(resultLabel);
+        windowLayout.add(resultLabel, BorderLayout.SOUTH);
 
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setBorder(null);
+        windowLayout.add(scrollPane, BorderLayout.CENTER);
+
+        verticalLayout = new JPanel();
+        scrollPane.setViewportView(verticalLayout);
+        verticalLayout.setBackground(new Color(255, 255, 255));
+        verticalLayout.setLayout(new GridLayout(0, 3, 10, 10));
+
+        // 검색 버튼 이벤트 리스너 추가
         searchButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 updateMoviePoster(app, resultLabel);
             }
         });
 
+        // 초기화 버튼 이벤트 리스너 추가
         resetButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 movieNameTextField.setText("");
                 directorNameTextField.setText("");
                 actorNameTextField.setText("");
                 genreComboBox.setSelectedItem(DEFAULT_GENRE);
-
                 updateMoviePoster(app, resultLabel);
             }
         });
 
-        // 스크롤 뷰 구현
-        JScrollPane scrollPane = new JScrollPane();
-        scrollPane.setBounds(6, 220, 636, 362);
-        scrollPane.setBorder(null);
-        windowLayout.add(scrollPane);
-
-        verticalLayout = new JPanel();
-        scrollPane.setViewportView(verticalLayout);
-        verticalLayout.setBackground(new Color(255, 255, 255));
-        verticalLayout.setLayout(new GridLayout(0, 3, 10, 10)); // GridLayout으로 변경
-
+        // 초기 영화 포스터 업데이트
         updateMoviePoster(app, resultLabel);
     }
 
@@ -129,8 +127,8 @@ public class SearchPage extends JPanel {
                 directorNameTextField.getText(),
                 actorNameTextField.getText(),
                 genreComboBox.getSelectedItem().toString(),
-                app.getCurrentDate(),
-                app.getCurrentTime()
+                app.getCurrentDate(),  // 현재 날짜
+                app.getCurrentTime()   // 현재 시간
         );
 
         verticalLayout.removeAll();

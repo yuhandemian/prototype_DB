@@ -107,18 +107,18 @@ public class AdminPage extends JPanel {
         JScrollPane updateWhereScrollPane = new JScrollPane(updateWhereTextArea);
         updateTableComboBox = new JComboBox<>(new String[]{"Movie", "Theater", "ScreeningSchedule", "Seat", "Customer", "Booking", "Ticket"});
         updatePanel.setLayout(new BoxLayout(updatePanel, BoxLayout.Y_AXIS));
-        updatePanel.add(new JLabel("테이블 명: "), BorderLayout.NORTH);
-        updatePanel.add(updateTableComboBox, BorderLayout.NORTH);
-        updatePanel.add(new JLabel("SET 절"), BorderLayout.NORTH);
-        updatePanel.add(updateSetScrollPane, BorderLayout.CENTER);
-        updatePanel.add(new JLabel("WHERE 절"), BorderLayout.SOUTH);
-        updatePanel.add(updateWhereScrollPane, BorderLayout.SOUTH);
+        updatePanel.add(new JLabel("테이블 명: "));
+        updatePanel.add(updateTableComboBox);
+        updatePanel.add(new JLabel("SET 절"));
+        updatePanel.add(updateSetScrollPane);
+        updatePanel.add(new JLabel("WHERE 절"));
+        updatePanel.add(updateWhereScrollPane);
 
         JPanel deletePanel = new JPanel(new BorderLayout());
         deleteWhereTextArea = new JTextArea(5, 40);
         JScrollPane deleteWhereScrollPane = new JScrollPane(deleteWhereTextArea);
         deleteTableComboBox = new JComboBox<>(new String[]{"Movie", "Theater", "ScreeningSchedule", "Seat", "Customer", "Booking", "Ticket"});
-        deletePanel.add(new JLabel("테이블 명: "), BorderLayout.NORTH);
+        deletePanel.add(new JLabel("테이블 명: "));
         deletePanel.add(deleteTableComboBox, BorderLayout.NORTH);
         deletePanel.add(new JLabel("WHERE 절"), BorderLayout.CENTER);
         deletePanel.add(deleteWhereScrollPane, BorderLayout.CENTER);
@@ -228,12 +228,11 @@ public class AdminPage extends JPanel {
         // Convert data to Object[][]
         Object[][] dataArray = new Object[data.size()][];
         for (int i = 0; i < data.size(); i++) {
-            dataArray[i] = data.get(i).toArray();
+            dataArray[i] = data.get(i).toArray(new Object[0]);
         }
 
         // Convert column names to String[]
-        String[] columnArray = new String[columnNames.size()];
-        columnNames.toArray(columnArray);
+        String[] columnArray = columnNames.toArray(new String[0]);
 
         return new javax.swing.table.DefaultTableModel(dataArray, columnArray);
     }

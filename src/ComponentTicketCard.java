@@ -1,18 +1,20 @@
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import javax.swing.*;
 
 public class ComponentTicketCard extends JPanel {
-
     private static final long serialVersionUID = 1L;
     private int ticketID;
     private JCheckBox checkBox;
     private App app;
     private JLabel expiredLabel;
+    private boolean isExpired;
 
     public ComponentTicketCard(App app, JoinedTicketObj ticket) {
         this.app = app;
@@ -86,9 +88,11 @@ public class ComponentTicketCard extends JPanel {
             }
         });
 
-        addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                app.showReservationDetail(ticketID);
+        addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                if (!isExpired) {
+                    app.showReservationDetail(ticketID);
+                }
             }
         });
     }
@@ -98,7 +102,7 @@ public class ComponentTicketCard extends JPanel {
     }
 
     public boolean isSelected() {
-        return !isExpired() && checkBox.isSelected();
+        return !isExpired && checkBox.isSelected();
     }
 
     public void removeReservation(int ticketID) {
@@ -115,6 +119,7 @@ public class ComponentTicketCard extends JPanel {
         setBackground(Color.LIGHT_GRAY);
         expiredLabel.setVisible(true);
         checkBox.setEnabled(false);
+        isExpired = true;
         for (Component component : getComponents()) {
             if (!(component instanceof JLabel) && !(component instanceof JCheckBox)) {
                 component.setEnabled(false);
